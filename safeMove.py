@@ -10,8 +10,9 @@ class safeMove:
 
     def _stopDist(self):
         self.stat.poll()
-        delta = [(i-j) for i, j in zip(self.stat.actual_position, 
-            self.stat.probed_position)]
+        delta = [(i-j) for i, j in
+                 zip(self.stat.actual_position,
+                     self.stat.probed_position)]
         return math.sqrt(delta[0] ** 2 + delta[1] ** 2 + delta[2] ** 2)
 
     def move(self,
@@ -59,8 +60,9 @@ class safeMove:
             assert self.mdi.exe(gcode) != -1  # May have error
             self.stat.poll()
             if self.stat.probe_tripped:
-                raise Exception("Unexpected probe trip, managed to "
-                        "stop within {} machine units".format(self._stopDist()))
+                raise Exception(
+                    "Unexpected probe trip, managed to "
+                    "stop within {} machine units".format(self._stopDist()))
         else:
             raise Exception("No coordinates provided.")
 
@@ -73,7 +75,7 @@ class safeMove:
         self.stat = linuxcnc.stat()
         self.mdi = mdi
         self.safeFeed = 60.0 * \
-            math.sqrt(accel * safeDist)  # Don't know the exact formula 
+            math.sqrt(accel * safeDist)  # Don't know the exact formula
         self.tolerance = tolerance
 
 
