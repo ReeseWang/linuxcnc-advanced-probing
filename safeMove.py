@@ -57,7 +57,11 @@ class safeMove:
 
         if commandedCoords:
             gcode += "F{:.3f}".format(self.safeFeed)
+            self.stat.poll()
+            self.mdi.exe("G94")
             assert self.mdi.exe(gcode) != -1  # May have error
+            if 930 in self.stat.gcodes:
+                self.mdi.exe("G93")
             self.stat.poll()
             if self.stat.probe_tripped:
                 raise Exception(
