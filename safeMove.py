@@ -4,7 +4,6 @@ import linuxcnc
 import logging
 import mdiCodeExec
 import math
-from misc import relativePos
 
 
 class safeMove:
