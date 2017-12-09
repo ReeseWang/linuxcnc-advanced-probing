@@ -7,6 +7,7 @@ import logging
 class mdiCodeExec:
 
     def exe(self, code):
+        self.logger.debug("Executing MDI: " + code)
         self.command.mdi(code)
         return self.command.wait_complete(self.timeout)
 
@@ -48,18 +49,18 @@ if __name__ == "__main__":
 
     c = linuxcnc.command()
     c.mode(linuxcnc.MODE_MANUAL)
-    logger.debug("LinuxCNC mode switched to MANUAL to "
-                 "test mode returning.")
+    logger.info("LinuxCNC mode switched to MANUAL to "
+                "test mode returning.")
 
     with mdiCodeExec() as mdi:
 
         mdi.exe("G91")  # Incremental distance mode
 
         assert mdi.exe("G38.2 X0.1 F50") == linuxcnc.RCS_ERROR
-        logger.debug("Non-tripped G38.2 probing returned RCS_ERROR correctly.")
+        logger.info("Non-tripped G38.2 probing returned RCS_ERROR correctly.")
 
         assert mdi.exe("G38.3 X0.1 F50") == linuxcnc.RCS_DONE
-        logger.debug("Non-tripped G38.3 probing returned RCS_DONE correctly.")
+        logger.info("Non-tripped G38.3 probing returned RCS_DONE correctly.")
 
         mdi.timeout = 1.0
         assert mdi.exe("G1 X2 F60") == -1  # Timeout
@@ -67,5 +68,5 @@ if __name__ == "__main__":
 
         mdi.exe("G90")
 
-    logger.debug("Successfully finished the MDI sesion. LinuxCNC should be in "
-                 "MANUAL mode now.")
+    logger.info("Successfully finished the MDI sesion. LinuxCNC should be in "
+                "MANUAL mode now.")
