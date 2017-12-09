@@ -9,22 +9,11 @@ from misc import relativePos
 
 class safeMove:
 
-    def _move(self, gcode, commandedCoords):
+    def _stopDist(self):
         self.stat.poll()
-        prevPos = relativePos(self.stat)
-        assert self.mdi.exe(gcode) == linuxcnc.RCS_DONE
-        self.stat.poll()
-        nowPos = relativePos(self.stat)
-        if 910 in self.stat.gcodes:  # Incremental mode
-            for i, c in commandedCoords.iteritems():
-                self.logger.debug("Now at {}, commanded {}".format(
-                    nowPos[i], prevPos[i] + c))
-                assert abs(nowPos[i] - prevPos[i] - c) < self.tolerance
-        else:
-            for i, c in commandedCoords.iteritems():
-                self.logger.debug("Now at {}, commanded {}".format(
-                    nowPos[i], c))
-                assert abs(nowPos[i] - c) < self.tolerance
+        delta = [(i-j) for i, j in zip(self.stat.actual_position, 
+            self.stat.probed_position)]
+        return math.sqrt(delta[0] ** 2 + delta[1] ** 2 + delta[2] ** 2)
 
     def move(self,
              x=None,
@@ -68,7 +57,11 @@ class safeMove:
 
         if commandedCoords:
             gcode += "F{:.3f}".format(self.safeFeed)
-            self._move(gcode, commandedCoords)
+            assert self.mdi.exe(gcode) != -1  # May have error
+            self.stat.poll()
+            if self.stat.probe_tripped:
+                raise Exception("Unexpected probe trip, managed to "
+                        "stop within {} machine units".format(self._stopDist()))
         else:
             raise Exception("No coordinates provided.")
 
@@ -81,7 +74,7 @@ class safeMove:
         self.stat = linuxcnc.stat()
         self.mdi = mdi
         self.safeFeed = 60.0 * \
-            math.sqrt(2 * accel * safeDist)
+            math.sqrt(accel * safeDist)  # Don't know the exact formula 
         self.tolerance = tolerance
 
 
@@ -91,22 +84,6 @@ if __name__ == "__main__":
 
     with mdiCodeExec.mdiCodeExec() as mdi:
         s = safeMove(mdi)
-        mdi.exe("G90")
-        s.move(x=100, y=80)
-        s.move(x=0, y=0)
-        logger.info("Absolute Distance Mode OK.")
-        mdi.exe("G91")
-        s.move(x=100, y=0)
-        s.move(x=-100, y=80)
-        logger.info("Incremental Distance Mode OK.")
-        mdi.exe("G90")
-        mdi.exe("G10 L2 P0 R45")  # Rotate current CS 45 deg
-        s.move(x=10, y=20)
-        s.move(x=0, y=0)
-        logger.info("Absolute Distance Mode in rotated CS OK.")
-        mdi.exe("G91")
-        s.move(x=10, y=20)
-        s.move(x=-10, y=-20)
-        logger.info("Incremental Distance Mode in rotated CS OK.")
-        mdi.exe("G90")
-        mdi.exe("G10 L2 P0 R0")  # Rotate current CS 0 deg
+        s.move(x=100, y=80, z=140)
+        s.move(x=0, y=0, z=150)
+        logger.info("Moved to destination without the probe being tripped.")
