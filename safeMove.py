@@ -15,6 +15,50 @@ class safeMove:
                      self.stat.probed_position)]
         return math.sqrt(delta[0] ** 2 + delta[1] ** 2 + delta[2] ** 2)
 
+    def rapid(self,
+              x=None,
+              y=None,
+              z=None,
+              a=None,
+              b=None,
+              c=None,
+              u=None,
+              v=None,
+              w=None):
+        commandedCoords = {}
+        gcode = "G38.3 "
+        if x is not None:
+            commandedCoords[0] = x
+            gcode += "X{:.4f} ".format(x)
+        if y is not None:
+            commandedCoords[1] = y
+            gcode += "Y{:.4f} ".format(y)
+        if z is not None:
+            commandedCoords[2] = z
+            gcode += "Z{:.4f} ".format(z)
+        if a is not None:
+            commandedCoords[3] = a
+            gcode += "A{:.4f} ".format(a)
+        if b is not None:
+            commandedCoords[4] = b
+            gcode += "B{:.4f} ".format(b)
+        if c is not None:
+            commandedCoords[5] = c
+            gcode += "C{:.4f} ".format(c)
+        if u is not None:
+            commandedCoords[6] = u
+            gcode += "U{:.4f} ".format(u)
+        if v is not None:
+            commandedCoords[7] = v
+            gcode += "V{:.4f} ".format(v)
+        if w is not None:
+            commandedCoords[8] = w
+            gcode += "W{:.4f} ".format(w)
+        if commandedCoords:
+            self.mdi.exe(gcode)
+        else:
+            raise Exception("No coordinates provided.")
+
     def move(self,
              x=None,
              y=None,
